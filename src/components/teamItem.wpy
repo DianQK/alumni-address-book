@@ -1,0 +1,40 @@
+<style lang="less">
+  .team-item {
+    text-align: left;
+    padding: 15px;
+
+    &-title {
+      font-size: 21px;
+      color: #222222;
+      display: block;
+    }
+    &-intro {
+      font-size: 14px;
+      color: #888888;
+      display: block;
+    }
+  }
+</style>
+<template>
+  <view @tap="teamTap" class="team-item">
+    <view class="team-item-title">{{team.name}}</view>
+    <view class="team-item-intro">{{team.intro}}</view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+
+  export default class TeamItem extends wepy.component {
+    props = {
+      team: {}
+    }
+    methods = {
+      teamTap () {
+        this.$root.$navigate('teamMembers', {
+          teamId: this.team.objectId,
+          teamName: this.team.name
+        })
+      }
+    }
+  }
+</script>

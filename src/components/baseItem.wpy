@@ -1,0 +1,38 @@
+<style lang="less">
+  .base-item {
+    text-align: left;
+    padding: 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    &-title {
+      font-size: 18px;
+      color: #222222;
+      display: block;
+    }
+    &-content {
+      font-size: 18px;
+      color: #888888;
+      display: block;
+    }
+  }
+</style>
+<template>
+  <view class="base-item">
+    <view>
+      <text class="base-item-title">{{title}}</text>
+      <text class="base-item-content">{{content}}</text>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+
+  export default class BaseItem extends wepy.component {
+    props = {
+      title: String,
+      content: String
+    }
+  }
+</script>

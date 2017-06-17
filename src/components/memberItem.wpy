@@ -1,0 +1,73 @@
+<style lang="less">
+  .member-item {
+    text-align: left;
+    padding: 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    align-content: space-between;
+
+    &-title {
+      font-size: 21px;
+      color: #222222;
+      display: block;
+    }
+    &-intro {
+      font-size: 14px;
+      color: #888888;
+      display: block;
+    }
+    &-call-button {
+      margin-left: 10px;
+      width: 44px;
+      height: 44px;
+      background-color: white;
+
+      &::after {
+        border-width: 0;
+      }
+    }
+    &-call {
+      width: 24px;
+      height: 24px;
+    }
+  }
+</style>
+<template>
+  <view @tap="memberTap" class="member-item">
+    <view style="flex: 1;">
+      <text class="member-item-title">{{member.name}}</text>
+      <text class="member-item-intro">{{member.currentStatus}}</text>
+    </view>
+    <button class="member-item-call-button" @tap.stop="callMemberTap">
+      <image class="member-item-call" mode="aspectFit" src="../images/phone-call@2x.png"></image>
+    </button>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+
+  export default class MemberItem extends wepy.component {
+    props = {
+      member: {
+        type: Object
+      }
+    }
+    data = {
+      mobilePhoneNumber: ''
+    }
+    methods = {
+      memberTap () {
+        wx.navigateTo({
+          url: `memberDetail?memberId=${this.member.objectId}`
+        })
+      },
+      callMemberTap () {
+        wx.makePhoneCall({
+          phoneNumber: this.member.toJSON().mobilePhoneNumber
+        })
+      }
+    }
+  }
+</script>

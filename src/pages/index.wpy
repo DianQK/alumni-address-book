@@ -1,0 +1,99 @@
+<style lang="less">
+@import "../less/button";
+@import "../less/common";
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 20px;
+  }
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+  .footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+<template>
+  <view class="container">
+    <view class="userinfo">
+      {{ dev }}
+      <avatar :disabled="changeAvatarDisabled" />
+      <text wx:if="{{mobilePhoneNumber.length === 0}}" class="tip">点击头像即可修改个人信息，并同步信息到全部班级。</text>
+    </view>
+    <teamList :teams.sync="teams"/>
+    <button wx:if="{{teams ? teams.length < 10 : false}}" class="primary-button" @tap="createTeamTap">
+      创建新班级
+    </button>
+    <text class="tip">按道理来讲，一个人最多可以拥有 10 个班级(。-`ω´-)</text>
+    <view class="footer">
+      <text @tap="entryAbout" class="entry-tip">关于</text><text class="tip">和</text><text @tap="entryOpenSource" class="entry-tip">开源许可</text>
+    </view>
+  </view>
+</template>
+
+<script>
+  import Avatar from '../components/avatar'
+  import TeamList from '../components/teamList'
+  import { connect } from 'wepy-redux'
+  import { updateTeams } from '../store/actions'
+  import BasePage from './base'
+
+  @connect({
+    teams (state) {
+      return state.team.teams
+    },
+    mobilePhoneNumber (state) {
+      return state.user.mobilePhoneNumber
+    }
+  })
+
+  export default class Index extends BasePage {
+    config = {
+      navigationBarTitleText: '我的班级'
+    }
+
+    components = {
+      avatar: Avatar,
+      teamList: TeamList
+    }
+
+    data = {
+      changeAvatarDisabled: false,
+      dev: ''
+    }
+
+    methods = {
+      createTeamTap () {
+        this.$navigate('createTeam')
+      },
+      entryAbout () {
+        this.$navigate('about')
+      },
+      entryOpenSource () {
+        this.$navigate('openSource')
+      }
+    }
+
+    updateTeams = async () => {
+      await this.$store.dispatch(updateTeams())
+    }
+
+    async onLoad() {
+      let empty = this.teams.length === 0
+      await this.showLoading(empty, this.updateTeams)
+    }
+
+    async pullDownRefresh () {
+      await this.updateTeams()
+    }
+  }
+</script>

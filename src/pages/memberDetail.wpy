@@ -1,0 +1,100 @@
+<style lang="less">
+@import "../less/button";
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 15px;
+  }
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    align-content: stretch;
+    justify-content: center;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+  .primary-button {
+    margin-bottom: 0px;
+  }
+  .secondary-button {
+    margin-top: 10px;
+  }
+</style>
+<template>
+  <view class="container">
+    <view class="userinfo">
+      <image style="width: 100%; height: 120px; text-align: center;" mode="aspectFit" src="{{memberAvatarUrl}}"></image>
+      <nameItem title="姓名" :content.sync="memberName" />
+      <mobilePhoneNumberItem title="手机号" :content.sync="memberMobilePhoneNumber" />
+      <currentStatusItem title="当前状态" :content.sync="memberCurrentStatus" />
+    </view>
+    <button class="primary-button" @tap="saveMember">
+      保存到通讯录
+    </button>
+    <button class="secondary-button" @tap="callMember">
+      拨打电话
+    </button>
+  </view>
+</template>
+
+<script>
+  import BaseItem from '../components/baseItem'
+  import AV from '../libs/av-weapp-min'
+  import Student from '../models/student'
+  import BasePage from './base'
+
+  export default class MemberDetail extends BasePage {
+    config = {
+      navigationBarTitleText: '个人信息',
+      enablePullDownRefresh: false
+    }
+    components = {
+      nameItem: BaseItem,
+      mobilePhoneNumberItem: BaseItem,
+      currentStatusItem: BaseItem
+    }
+
+    data = {
+      memberName: '',
+      memberMobilePhoneNumber: '',
+      memberCurrentStatus: '',
+      memberAvatarUrl: ''
+    }
+
+    methods = {
+      saveMember () {
+        wx.addPhoneContact({
+          photoFilePath: this.memberAvatarUrl,
+          firstName: this.memberName,
+          mobilePhoneNumber: this.memberMobilePhoneNumber,
+          remark: this.memberCurrentStatus
+        })
+      },
+      callMember () {
+        wx.makePhoneCall({
+          phoneNumber: this.memberMobilePhoneNumber
+        })
+      }
+    }
+
+    async onLoad(e) {
+      this.showLoading(true, async () => {
+        let memberId = e.memberId
+        await this.fetchMember(memberId)
+      })
+    }
+
+    async fetchMember (studentId) {
+      let student = await new AV.Query(Student).get(studentId)
+      let member = student.toJSON()
+      this.memberName = member.name
+      this.memberMobilePhoneNumber = member.mobilePhoneNumber
+      this.memberCurrentStatus = member.currentStatus
+      this.memberAvatarUrl = member.avatarUrl
+      this.$apply()
+    }
+  }
+</script>

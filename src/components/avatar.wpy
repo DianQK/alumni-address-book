@@ -1,0 +1,40 @@
+<style lang="less">
+  .avatar {
+    text-align: center;
+  }
+  .avatar-image {
+    height: 120rpx;
+    width: 120rpx;
+  }
+</style>
+<template>
+  <view class="avatar">
+    <image @tap="myProfileTap" class="avatar-image" mode="aspectFit" src="{{avatarUrl}}"></image>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import { connect } from 'wepy-redux'
+
+  @connect({
+    avatarUrl (state) {
+      return state.user.avatarUrl
+    }
+  })
+
+  export default class Avatar extends wepy.component {
+    props = {
+      disabled: {
+        type: Boolean,
+        default: true
+      }
+    }
+    methods = {
+      myProfileTap () {
+        if (!this.disabled) {
+          this.$root.$navigate('profile')
+        }
+      }
+    }
+  }
+</script>

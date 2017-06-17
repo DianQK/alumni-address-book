@@ -1,0 +1,37 @@
+<style lang="less">
+  .team-item {
+    text-align: left;
+    padding: 15px;
+
+    &-title {
+      font-size: 21px;
+      color: #222222;
+      display: block;
+    }
+    &-intro {
+      font-size: 14px;
+      color: #888888;
+      display: block;
+    }
+  }
+</style>
+<template>
+  <view>
+    <repeat for="{{teams}}" item="team">
+      <teamItem :team="team" />
+    </repeat>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import TeamItem from './teamItem'
+
+  export default class TeamList extends wepy.component {
+    props = {
+      teams: {}
+    }
+    components = {
+      teamItem: TeamItem
+    }
+  }
+</script>

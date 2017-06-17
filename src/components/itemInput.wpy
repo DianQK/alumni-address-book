@@ -1,0 +1,69 @@
+<style lang="less">
+  .item-input {
+    text-align: left;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    align-content: stretch;
+    font-size: 16px;
+    padding: 8px 15px;
+
+    &-title {
+      width: 80px;
+      margin: auto;
+    }
+    &-input {
+      margin: auto;
+      flex: 1;
+    }
+  }
+</style>
+<template>
+  <view class="item-input">
+    <text class="item-input-title">{{title}}</text>
+    <textarea
+    class="item-input-input"
+    bindinput="bindInput"
+    type="{{type}}"
+    auto-height
+    placeholder="{{placeholder}}"
+    value="{{value}}"
+    />
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class ItemInput extends wepy.component {
+    props = {
+      title: String,
+      placeholder: {
+        type: String,
+        default: ''
+      },
+      type: {
+        type: String,
+        default: 'text'
+      },
+      value: {
+        type: String,
+        default: ''
+      },
+      inputValue: {
+        type: String,
+        default: '',
+        twoWay: true
+      }
+    }
+    onLoad () {
+      this.inputValue = this.value
+    }
+    methods = {
+      bindInput (e) {
+        var value = e.detail.value
+        this.inputValue = value
+      }
+    }
+  }
+</script>

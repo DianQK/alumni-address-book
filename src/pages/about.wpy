@@ -1,0 +1,35 @@
+<style lang="less">
+@import "../less/button";
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+  }
+</style>
+
+<template>
+  <view class="container">
+    <text>{{content}}</text>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class About extends wepy.page {
+    config = {
+      navigationBarTitleText: '关于',
+      enablePullDownRefresh: false
+    }
+    data = {
+      content: ''
+    }
+    onLoad () {
+      this.content = `这是一款可以用来收集大家联系方式的工具，你可以用来创建一个班级同学录，以免毕业后忘记了大家的联系方式。
+      你也可以用来在刚开学时快速收集同学们的联系方式。
+      此外也可以创建一个宿舍做为班级。
+      `
+    }
+  }
+</script>

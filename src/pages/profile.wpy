@@ -1,0 +1,113 @@
+<style lang="less">
+@import "../less/button";
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 20px;
+  }
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+</style>
+<template>
+  <view class="container">
+    <view class="userinfo">
+      <avatar />
+    </view>
+    <form>
+      <block>
+        <itemInputName
+        title="姓名"
+        placeholder="填写你的姓名"
+        :value.sync="name"
+        :inputValue="inputName"/>
+        <itemInputMobilePhoneNumber
+        title="手机号"
+        placeholder="填写手机号码"
+        type="number"
+        :value.sync="mobilePhoneNumber"
+        :inputValue="inputMobilePhoneNumber"/>
+        <itemCurrentStatus
+        title="当前状态"
+        placeholder="填写你当前的状态，如读研"
+        :value.sync="currentStatus"
+        :inputValue="inputCurrentStatus"/>
+      </block>
+    </form>
+    <button @tap="ensureTap" class="primary-button" loading="{{loading}}">
+      保存
+    </button>
+  </view>
+</template>
+
+<script>
+  import { connect } from 'wepy-redux'
+  import Avatar from '../components/avatar'
+  import ItemInput from '../components/itemInput'
+  import Form from '../components/form'
+  import BasePage from './base'
+  import { updateProfile } from '../store/actions'
+
+  @connect({
+    name (state) {
+      return state.user.name
+    },
+    mobilePhoneNumber (state) {
+      return state.user.mobilePhoneNumber
+    },
+    currentStatus (state) {
+      return state.user.currentStatus
+    }
+  })
+
+  export default class Profile extends BasePage {
+    config = {
+      navigationBarTitleText: '个人信息',
+      enablePullDownRefresh: false
+    }
+    components = {
+      itemInputName: ItemInput,
+      itemInputMobilePhoneNumber: ItemInput,
+      itemCurrentStatus: ItemInput,
+      avatar: Avatar,
+      form: Form
+    }
+
+    data = {
+      inputName: '',
+      inputMobilePhoneNumber: '',
+      inputCurrentStatus: '',
+      loading: false
+    }
+
+    methods = {
+      bindNameInput (e) {
+        var value = e.detail.value
+        this.inputName = value
+      },
+      async ensureTap () {
+        if (this.loading) {
+          return
+        }
+        this.loading = true
+        let name = this.inputName
+        let mobilePhoneNumber = this.inputMobilePhoneNumber
+        let currentStatus = this.inputCurrentStatus
+        await this.$store.dispatch(updateProfile({ name, mobilePhoneNumber, currentStatus }))
+        this.loading = false
+        this.$apply()
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success',
+          duration: 2000
+        })
+      }
+    }
+  }
+</script>

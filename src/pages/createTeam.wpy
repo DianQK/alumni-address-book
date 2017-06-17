@@ -1,0 +1,105 @@
+<style lang="less">
+@import "../less/button";
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+</style>
+<template>
+  <view class="container">
+    <form>
+      <block>
+        <itemInputName
+        title="班级名称"
+        placeholder="请填写班级的名称"
+        :value="name"
+        :inputValue="inputName"/>
+        <itemInputIntro
+        title="简介"
+        placeholder="请填写一小段简介"
+        type="number"
+        :value="mobilePhoneNumber"
+        :inputValue="inputIntro"/>
+      </block>
+    </form>
+    <button @tap="ensureTap" class="primary-button">
+      确定
+    </button>
+  </view>
+</template>
+
+<script>
+  import Avatar from '../components/avatar'
+  import ItemInput from '../components/itemInput'
+  import Form from '../components/form'
+  import BasePage from './base'
+  import { createTeam } from '../store/actions'
+
+  export default class CreateTeam extends BasePage {
+    config = {
+      navigationBarTitleText: '创建班级',
+      enablePullDownRefresh: false
+    }
+
+    components = {
+      avatar: Avatar,
+      itemInputName: ItemInput,
+      itemInputIntro: ItemInput,
+      form: Form
+    }
+
+    data = {
+      inputName: '',
+      inputIntro: '',
+      creating: false
+    }
+
+    onLoad () {
+      this.creating = false
+    }
+
+    methods = {
+      bindNameInput (e) {
+        var value = e.detail.value
+        this.inputName = value
+      },
+      async ensureTap () {
+        if (this.creating) {
+          return
+        }
+        this.creating = true
+        if (this.inputName.length === 0) {
+          wx.showModal({
+            content: '班级名称不能为空',
+            showCancel: false,
+            confirmText: '好'
+          })
+          return
+        }
+        let name = this.inputName
+        let intro = this.inputIntro
+        let result = await this.$store.dispatch(createTeam({ name, intro }))
+        let createdTeam = result.payload.team
+        wx.showToast({
+          title: '创建成功',
+          icon: 'success',
+          duration: 2000
+        })
+        this.creating = false
+        this.$redirect('teamMembers', {
+          teamId: createdTeam.objectId,
+          teamName: createdTeam.name
+        })
+      }
+    }
+  }
+</script>

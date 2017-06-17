@@ -1,0 +1,212 @@
+<style lang="less">
+  @import "../less/button";
+  @import "../less/common";
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+  .not-exist {
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+
+    &-content {
+      margin-top: 15px;
+    }
+  }
+</style>
+<template>
+  <view class="container {{(!showTip) ? 'not-exist' : ''}}">
+    <block wx:if="{{showTip}}">
+    <repeat for="{{members}}" key="id" index="index" item="member">
+      <memberItem :member="member" />
+    </repeat>
+    </block>
+    <block wx:if="{{!hasJoined}}">
+      <text style="text-align: center;">你还没有加入这个班级哦~</text>
+      <button  @tap="joinTap" class="primary-button" loading="{{joinLoading}}">
+        加入班级
+      </button>
+    </block>
+    <block wx:if="{{teamNotExist}}">
+      <image style="width: 110px; height: 95px;" mode="aspectFit" src="../images/alert-triangle@2x.png"></image>
+      <text class="not-exist-content">班级不存在</text>
+    </block>
+    {{ getMembers }}
+    <text wx:if="{{showTip}}" class="tip">点击右上角的菜单转发即可邀请同学加入到班级中啦(。-`ω´-)</text>
+  </view>
+</template>
+
+<script>
+  import Avatar from '../components/avatar'
+  import MemberItem from '../components/memberItem'
+  import Team from '../models/team'
+  import TeamStudentMap from '../models/teamStudentMap'
+  import AV from '../libs/av-weapp-min'
+  import { connect } from 'wepy-redux'
+  import BasePage from './base'
+  import { updateMembers } from '../store/actions'
+
+  @connect({
+    name (state) {
+      return state.user.name
+    },
+    teamsMembers (state) {
+      return state.team.teamsMembers
+    }
+  }, {
+  })
+
+  export default class TeamMembers extends BasePage {
+    config = {
+      navigationBarTitleText: '班级成员'
+    }
+    components = {
+      avatar: Avatar,
+      memberItem: MemberItem
+    }
+
+    computed = {
+      members () {
+        if ((this.teamsMembers) && (this.teamId.length > 0) && (this.teamsMembers[this.teamId])) {
+          return this.teamsMembers[this.teamId]
+        } else {
+          return []
+        }
+      },
+      showTip () {
+        return (!this.teamNotExist) && (this.hasJoined)
+      }
+    }
+
+    data = {
+      teamId: '',
+      joinLoading: false,
+      hasJoined: true,
+      teamNotExist: false,
+      teamName: ''
+    }
+
+    methods = {
+      joinTap () {
+        this.joinTeam(this.teamId)
+      }
+    }
+
+    async onLoad (e, data) {
+      wx.hideShareMenu()
+      this.teamId = e.teamId
+      if (e.teamName) {
+        this.teamName = e.teamName
+        wx.setNavigationBarTitle({
+          title: this.teamName
+        })
+      } else {
+        wx.setNavigationBarTitle({
+          title: '班级成员'
+        })
+      }
+      this.$apply()
+      let loadMembers = this.members.length > 0
+      this.showLoading(!loadMembers, async () => {
+        await this.fetchTeamInfo()
+      })
+    }
+
+    onShareAppMessage () {
+      let teamName = this.teamName
+      if (teamName.length === 0) {
+        teamName = '班级'
+      }
+      return {
+        title: `${this.name}邀请你加入${teamName}`,
+        path: `pages/teamMembers?teamId=${this.teamId}`
+      }
+    }
+
+    async pullDownRefresh () {
+      await this.fetchTeamInfo()
+    }
+
+    async fetchTeamInfo() {
+      let teamExist = await this.verifyTeamExist(this.teamId)
+      this.teamNotExist = !teamExist
+      if (teamExist) {
+        let hasJoined = await this.verifyHasJoined(this.teamId)
+        this.hasJoined = hasJoined
+        if (hasJoined) {
+          await this.fetchMembers(this.teamId)
+          wx.showShareMenu({ withShareTicket: true })
+        }
+      }
+      this.$apply()
+    }
+
+    async joinTeam (teamId) {
+      this.joinLoading = true
+      let user = await this.getUser()
+      var acl = new AV.ACL()
+      acl.setPublicReadAccess(true)
+      acl.setPublicWriteAccess(false)
+      acl.setWriteAccess(user, true)
+      let student = AV.Object.createWithoutData('Student', user.get('studentId'))
+      let team = AV.Object.createWithoutData('Team', teamId)
+      await new TeamStudentMap({
+        team: team,
+        student: student,
+        master: false
+      })
+      .setACL(acl).save()
+      wx.showToast({
+        title: '加入成功',
+        icon: 'success',
+        duration: 1000
+      })
+      this.joinLoading = false
+      this.hasJoined = true
+      this.$apply()
+      this.fetchMembers(teamId)
+    }
+
+    async verifyTeamExist (teamId) {
+      try {
+        let team = await new AV.Query(Team).get(teamId)
+        this.teamName = team.name
+        if (this.teamName) {
+          wx.setNavigationBarTitle({
+            title: this.teamName
+          })
+        }
+        return true
+      } catch (err) {
+        return false
+      }
+    }
+
+    async verifyHasJoined (teamId) {
+      let user = await this.getUser()
+      let student = AV.Object.createWithoutData('Student', user.get('studentId'))
+      let team = AV.Object.createWithoutData('Team', teamId)
+      let teamStudentMaps = await new AV.Query(TeamStudentMap)
+      .equalTo('team', team)
+      .equalTo('student', student)
+      .find()
+      let hasJoined = teamStudentMaps.length > 0
+      return hasJoined
+    }
+
+    async fetchMembers (teamId) {
+      await this.$store.dispatch(updateMembers(teamId))
+    }
+  }
+</script>
